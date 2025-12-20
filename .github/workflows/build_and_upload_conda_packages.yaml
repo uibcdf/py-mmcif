@@ -68,7 +68,7 @@ jobs:
           micromamba activate build
           out_dir="$(mktemp -d -t compilation-XXXXXXXXXX)"
           echo "Building into: $out_dir"
-          conda build . \
+          conda-build . \
             --no-anaconda-upload \
             --output-folder "$out_dir" \
             --package-format tar.bz2 \
