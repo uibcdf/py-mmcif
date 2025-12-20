@@ -23,6 +23,11 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
+      - name: Ensure submodules are present
+        shell: bash
+        run: |
+          git submodule update --init --recursive
+
       - name: Additional info about the build
         shell: bash
         run: |
@@ -53,27 +58,39 @@ jobs:
           micromamba info
           micromamba list
 
-      - name: Build and upload the conda packages
-        id: conda_build_upload
-        uses: uibcdf/action-build-and-upload-conda-packages@main
-        with:
-          meta_yaml_dir: devtools/conda-build
-          python-version: ${{ matrix.python-version }}
-          mambabuild: false
-          user: uibcdf
-          label: auto
-          conda_build_args: --package-format tar.bz2
-          platform_linux-64: true
-          platform_osx-64: true
-          platform_osx-arm64: true
-          platform_win-64: true
-          token: ${{ secrets.ANACONDA_UIBCDF_TOKEN }}
-
-      - name: Verify conda build/upload outputs
-        shell: bash
+      - name: Build conda package
+        shell: bash -l {0}
+        working-directory: devtools/conda-build
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-          if [ -z "${{ steps.conda_build_upload.outputs.paths }}" ]; then
-            echo "No package paths reported by the build/upload action."
+          set -euo pipefail
+          micromamba activate build
+          out_dir="$(mktemp -d -t compilation-XXXXXXXXXX)"
+          echo "Building into: $out_dir"
+          conda build . \
+            --no-anaconda-upload \
+            --output-folder "$out_dir" \
+            --package-format tar.bz2 \
+            --python "$PYTHON_VERSION"
+          package_path="$(find "$out_dir" -type f -name "*.tar.bz2" | head -n 1)"
+          if [ -z "$package_path" ]; then
+            echo "Conda build produced no package in $out_dir"
             exit 1
           fi
-          echo "Uploaded packages: ${{ steps.conda_build_upload.outputs.paths }}"
+          echo "PACKAGE_PATH=$package_path" >> "$GITHUB_ENV"
+          echo "Built package: $package_path"
+
+      - name: Upload conda package
+        shell: bash -l {0}
+        working-directory: devtools/conda-build
+        env:
+          ANACONDA_API_TOKEN: ${{ secrets.ANACONDA_UIBCDF_TOKEN }}
+        run: |
+          set -euo pipefail
+          micromamba activate build
+          if [ -z "${PACKAGE_PATH:-}" ]; then
+            echo "Missing PACKAGE_PATH from build step"
+            exit 1
+          fi
+          anaconda upload --user uibcdf --label auto "$PACKAGE_PATH"
