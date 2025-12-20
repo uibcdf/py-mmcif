@@ -52,6 +52,7 @@ jobs:
           micromamba list
 
       - name: Build and upload the conda packages
+        id: conda_build_upload
         uses: uibcdf/action-build-and-upload-conda-packages@main
         with:
           meta_yaml_dir: devtools/conda-build
@@ -65,3 +66,12 @@ jobs:
           platform_osx-arm64: true
           platform_win-64: true
           token: ${{ secrets.ANACONDA_UIBCDF_TOKEN }}
+
+      - name: Verify conda build/upload outputs
+        shell: bash
+        run: |
+          if [ -z "${{ steps.conda_build_upload.outputs.paths }}" ]; then
+            echo "No package paths reported by the build/upload action."
+            exit 1
+          fi
+          echo "Uploaded packages: ${{ steps.conda_build_upload.outputs.paths }}"
