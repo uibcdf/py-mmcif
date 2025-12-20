@@ -10,6 +10,8 @@ jobs:
   conda_deployment_with_new_tag:
     name: Conda deployment of package with Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    env:
+      CONDA_NO_PLUGINS: true
     strategy:
       fail-fast: false
       matrix:
@@ -53,7 +55,7 @@ jobs:
 
       - name: Build and upload the conda packages
         id: conda_build_upload
-        uses: uibcdf/action-build-and-upload-conda-packages@1.4.0
+        uses: uibcdf/action-build-and-upload-conda-packages@main
         with:
           meta_yaml_dir: devtools/conda-build
           python-version: ${{ matrix.python-version }}
