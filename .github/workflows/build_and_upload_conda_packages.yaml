@@ -8,13 +8,14 @@ on:
 
 jobs:
   conda_deployment_with_new_tag:
-    name: Conda deployment of package with Python ${{ matrix.python-version }}
-    runs-on: ubuntu-latest
+    name: Conda deployment on ${{ matrix.os }} with Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
     env:
       CONDA_NO_PLUGINS: true
     strategy:
       fail-fast: false
       matrix:
+        os: ["ubuntu-latest", "macos-latest"]
         python-version: ["3.10", "3.11", "3.12"]
 
     steps:
