@@ -4,6 +4,14 @@ This repository is a fork of https://github.com/rcsb/py-mmcif.
 Its sole purpose is to enable installation via conda, since no conda packages are available for this library.
 The uibcdf channel is used as our distribution channel to address this gap.
 
+## Installation from conda
+
+You can install the mmCIF Core Access Library using conda with the following command:
+
+```bash
+conda install -c uibcdf py-mmcif
+```
+
 ---
 
 [![Build Status](https://dev.azure.com/rcsb/RCSB%20PDB%20Python%20Projects/_apis/build/status/rcsb.py-mmcif?branchName=master)](https://dev.azure.com/rcsb/RCSB%20PDB%20Python%20Projects/_build/latest?definitionId=16&branchName=master)
