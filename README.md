@@ -1,20 +1,46 @@
 # mmCIF Core Access Library
 
-This repository is a fork of https://github.com/rcsb/py-mmcif.
-It provides portable, functionally tested conda packaging of the upstream Python API for
-Linux, macOS, and Windows. The package deliberately uses upstream's pure-Python CIF and
-BCIF readers so that one `noarch` artifact works consistently across platforms. Native
-acceleration remains available from upstream distributions on supported platforms.
+This repository is a packaging and portability fork of
+[rcsb/py-mmcif](https://github.com/rcsb/py-mmcif).
+
+[![Portable Conda package](https://github.com/uibcdf/py-mmcif/actions/workflows/build_and_upload_conda_packages.yaml/badge.svg)](https://github.com/uibcdf/py-mmcif/actions/workflows/build_and_upload_conda_packages.yaml)
+
+The fork provides the upstream `mmcif` Python API as one pure-Python `noarch` Conda
+package for Linux, macOS, and Windows. A candidate is built once and that exact artifact
+is installed through the Conda solver and exercised on `linux-64`, `linux-aarch64`,
+`osx-64`, `osx-arm64`, and `win-64` with Python 3.11 through 3.14. The functional check
+reads bundled CIF and BCIF files through absolute paths, including Windows drive paths.
+
+The package deliberately selects upstream's `IoAdapterPy` and `BinaryCifReader`
+implementations. It does not contain the optional C++ acceleration and does not claim
+performance parity with native builds. Python 3.14 is prospective validation for
+downstream readiness; it does not change the current MolSysSuite support range.
 
 ## Installation from conda
 
 You can install the mmCIF Core Access Library using conda with the following command:
 
 ```bash
-conda install -c uibcdf py-mmcif
+conda install --override-channels -c uibcdf -c conda-forge py-mmcif
 ```
 
 The installed import namespace remains `mmcif`, matching the upstream project.
+
+## Building from this fork
+
+Source builds retain the optional native extension on platforms where it is supported.
+Set `MMCIF_BUILD_EXTENSION=0` to request a portable pure-Python build or
+`MMCIF_BUILD_EXTENSION=1` to require the extension. Windows defaults to the portable
+backend because the upstream C++ build does not support MSVC.
+
+## Relationship with upstream
+
+UIBCDF maintains the Conda distribution for downstream projects that need a portable
+package. Parser behavior and the public API remain owned by the upstream project.
+The distribution was announced in
+[rcsb/py-mmcif#47](https://github.com/rcsb/py-mmcif/issues/47), and generally useful
+portability fixes developed here are intended to be offered upstream as focused pull
+requests. Packaging-specific reports for the UIBCDF channel belong in this fork.
 
 ---
 
