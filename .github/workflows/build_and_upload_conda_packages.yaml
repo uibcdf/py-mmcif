@@ -56,12 +56,13 @@ jobs:
             exit 1
           fi
           echo "package_path=${package_path}" >> "${GITHUB_OUTPUT}"
+          echo "channel_path=${output_directory}" >> "${GITHUB_OUTPUT}"
 
       - name: Preserve candidate package
         uses: actions/upload-artifact@v4
         with:
           name: py-mmcif-conda-candidate
-          path: ${{ steps.build.outputs.package_path }}
+          path: ${{ steps.build.outputs.channel_path }}
           if-no-files-found: error
           retention-days: 7
 
@@ -115,7 +116,12 @@ jobs:
             echo "Downloaded artifact contains no conda package" >&2
             exit 1
           fi
-          micromamba install --yes "${package_path}"
+          channel_uri="$(python -c 'import pathlib, sys; print(pathlib.Path(sys.argv[1]).resolve().as_uri())' "${RUNNER_TEMP}/candidate")"
+          micromamba install --yes --override-channels \
+            --channel "${channel_uri}" \
+            --channel conda-forge \
+            --channel defaults \
+            py-mmcif
           python "${GITHUB_WORKSPACE}/devtools/scripts/check_portable_install.py" \
             "${GITHUB_WORKSPACE}/mmcif/tests/data"
 
