@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # File: setup.py
 # Date: 17-Dec-2017
 #
@@ -12,10 +13,28 @@ import platform
 import re
 import subprocess
 import sys
-from distutils.version import LooseVersion  # pylint: disable=no-name-in-module,import-error
+from distutils.version import (
+    LooseVersion,  # pylint: disable=no-name-in-module,import-error
+)
 
 from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext
+
+
+def build_native_extension():
+    """Return whether the optional C++ acceleration should be built."""
+    configured = os.environ.get("MMCIF_BUILD_EXTENSION")
+    if configured is None:
+        return platform.system() != "Windows"
+
+    normalized = configured.strip().lower()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+    raise RuntimeError(
+        "MMCIF_BUILD_EXTENSION must be one of 1/0, true/false, yes/no, or on/off"
+    )
 
 
 class CMakeExtension(Extension):
@@ -63,12 +82,13 @@ class CMakeBuild(build_ext):
             print("------ WARNING could not locate python library")
         # ---
         inclPath = None
-        isp = os.path.join(sys.exec_prefix, "include", "python") + "%s.%s" % (sys.version_info.major, sys.version_info.minor) + "*"
+        python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
+        isp = os.path.join(sys.exec_prefix, "include", "python") + python_version + "*"
         ipL = glob.glob(isp)
         if ipL:
             inclPath = ipL[0]
         elif hasattr(sys, "base_exec_prefix"):
-            isp = os.path.join(sys.base_exec_prefix, "include", "python") + "%s.%s" % (sys.version_info.major, sys.version_info.minor) + "*"  # pylint: disable=no-member
+            isp = os.path.join(sys.base_exec_prefix, "include", "python") + python_version + "*"  # pylint: disable=no-member
             ipL = glob.glob(isp)
             if ipL:
                 inclPath = ipL[0]
@@ -81,7 +101,7 @@ class CMakeBuild(build_ext):
         buildArgs = ["--config", cfg]
 
         if platform.system() == "Windows":
-            cmakeArgs += ["-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}".format(cfg.upper(), extdir)]
+            cmakeArgs += [f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{cfg.upper()}={extdir}"]
             if sys.maxsize > 2 ** 32:
                 cmakeArgs += ["-A", "x64"]
             buildArgs += ["--", "/m"]
@@ -99,10 +119,8 @@ class CMakeBuild(build_ext):
         env = os.environ.copy()
         env["CXXFLAGS"] = '{} -DVERSION_INFO=\\"{}\\"'.format(env.get("CXXFLAGS", ""), self.distribution.get_version())
         env["RUN_FROM_DISUTILS"] = "yes"
-        #
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
-        #
         if debug:
             print("------------- setup.py -----------------")
             print("Extension source path ", ext.sourcedir)
@@ -114,12 +132,15 @@ class CMakeBuild(build_ext):
             print("sys.exec_prefix", sys.exec_prefix)
             print("CXXFLAGS ", env["CXXFLAGS"])
 
-        #
         subprocess.check_call(["cmake", ext.sourcedir] + cmakeArgs, cwd=self.build_temp, env=env)
         subprocess.check_call(["cmake", "--build", "."] + buildArgs, cwd=self.build_temp)
 
 
 setup(
-    ext_modules=[CMakeExtension("mmcif.core.mmciflib")],
-    cmdclass=dict(build_ext=CMakeBuild),
+    ext_modules=(
+        [CMakeExtension("mmcif.core.mmciflib")]
+        if build_native_extension()
+        else []
+    ),
+    cmdclass={"build_ext": CMakeBuild},
 )

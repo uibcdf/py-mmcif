@@ -1,31 +1,34 @@
 package:
   name: py-mmcif
-  version: "{{ environ['GIT_DESCRIBE_TAG'] }}"
+  version: "{{ load_file_regex(load_file='../../mmcif/__init__.py', regex_pattern='__version__\\s*=\\s*[\"\\\']([^\"\\\']+)[\"\\\']', from_recipe_dir=True).group(1) }}"
 source:
   path: ../../
 build:
-  number: 1
+  number: 0
+  noarch: python
 requirements:
   build:
   - python
   - pip
   - setuptools >=61.0
-  - cmake
-  - bison
-  - flex
-  - {{ compiler('c') }}
-  - {{ compiler('cxx') }}
   host:
-  - python
+  - python >=3.8
   - pip
   - setuptools >=61.0
   run:
-  - python
+  - python >=3.8
   - requests >=2.25
   - msgpack-python
+test:
+  source_files:
+  - devtools/scripts/check_portable_install.py
+  - mmcif/tests/data/1bna.cif
+  - mmcif/tests/data/1bna.bcif.gz
+  commands:
+  - python devtools/scripts/check_portable_install.py mmcif/tests/data
 about:
   home: https://mmcif.wwpdb.org
   license: Apache-2.0
-  summary: 'Forked packaging to enable conda installation of mmCIF Core Access Library'
-  description: 'This package is built from a fork of https://github.com/rcsb/py-mmcif. The fork exists solely to enable installation via conda, since no conda packages are available for this library. The uibcdf channel is used as our distribution channel to address this gap.'
+  summary: 'Portable conda packaging for the mmCIF Core Access Library'
+  description: 'This noarch package installs the upstream pure-Python CIF and BCIF backends so that the mmCIF DataContainer API is available consistently on Linux, macOS, and Windows. Native acceleration remains available from upstream distributions where supported.'
   dev_url: https://github.com/uibcdf/py-mmcif
