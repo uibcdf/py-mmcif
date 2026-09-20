@@ -29,8 +29,11 @@ reported upstream.
   and ARM macOS, and x86-64 Windows with every supported MolSysSuite Python version.
   Python 3.14 is also exercised prospectively; this does not change the suite-wide
   support declaration.
-- Manual runs do not publish unless `publish` is explicitly enabled. Release runs upload
-  only after the complete test matrix passes.
+- Manual runs do not publish unless `publish` is explicitly enabled. Release runs do not
+  upload a package: they rebuild and test the exact tag without attempting to overwrite the
+  Conda coordinate published by its prior explicit manual gate.
+- Publish a candidate through a manual `publish=true` run first, verify the public
+  channel independently, and create the GitHub Release on that exact tested commit.
 - Uploads to Anaconda using `ANACONDA_UIBCDF_TOKEN` and the `uibcdf` user.
 - Channels for dependencies: `conda-forge` and `defaults` only.
 

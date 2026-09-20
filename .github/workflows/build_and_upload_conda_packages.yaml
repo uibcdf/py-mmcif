@@ -136,7 +136,7 @@ jobs:
   publish:
     name: Publish tested package
     needs: [build, test]
-    if: github.event_name == 'release' || inputs.publish
+    if: github.event_name == 'workflow_dispatch' && inputs.publish
     runs-on: ubuntu-latest
 
     steps:
