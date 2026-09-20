@@ -116,9 +116,17 @@ jobs:
             echo "Downloaded artifact contains no conda package" >&2
             exit 1
           fi
-          channel_uri="$(python -c 'import pathlib, sys; print(pathlib.Path(sys.argv[1]).resolve().as_uri())' "${RUNNER_TEMP}/candidate")"
+          channel_url="http://127.0.0.1:8765"
+          python -m http.server 8765 \
+            --bind 127.0.0.1 \
+            --directory "${RUNNER_TEMP}/candidate" \
+            > "${RUNNER_TEMP}/candidate-channel.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "${server_pid}" 2>/dev/null || true' EXIT
+          sleep 1
+          python -c "import urllib.request; urllib.request.urlopen('${channel_url}/noarch/repodata.json').read(1)"
           micromamba install --yes --override-channels \
-            --channel "${channel_uri}" \
+            --channel "${channel_url}" \
             --channel conda-forge \
             --channel defaults \
             py-mmcif
