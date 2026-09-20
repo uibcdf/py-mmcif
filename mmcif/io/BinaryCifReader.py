@@ -7,15 +7,18 @@
 #  Updates:
 ##
 
-from collections import OrderedDict
 import gzip
 import io
 import logging
+import ntpath
+import os
 import struct
+from collections import OrderedDict
 from contextlib import closing
 
 import msgpack
 import requests
+
 from mmcif.api.DataCategory import DataCategory
 from mmcif.api.PdbxContainers import DataContainer
 
@@ -131,6 +134,9 @@ class BinaryCifReader(object):
             bool: True if locator is a local path
         """
         try:
+            locator = str(locator)
+            if os.path.isabs(locator) or ntpath.isabs(locator):
+                return True
             locSp = urlsplit(locator)
             return locSp.scheme in ["", "file"]
         except Exception as e:

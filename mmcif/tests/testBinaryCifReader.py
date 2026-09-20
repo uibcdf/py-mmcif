@@ -13,6 +13,7 @@ import time
 import unittest
 
 import msgpack
+
 from mmcif.io.BinaryCifReader import BinaryCifReader
 from mmcif.io.IoAdapterPy import IoAdapterPy as IoAdapter
 
@@ -85,6 +86,12 @@ class BinaryCifReaderTests(unittest.TestCase):
             logger.info("encoder %r", bD[b"encoder"] if b"encoder" in bD else bD["encoder"])
             self.assertTrue(u"dataBlocks" in bD)
         #
+
+    def testWindowsAbsolutePathIsLocal(self):
+        reader = BinaryCifReader()
+        self.assertTrue(
+            reader._BinaryCifReader__isLocal(r"C:\data\1bna.bcif.gz")
+        )
 
     def testDeserializeLocalRcsb(self):
         try:

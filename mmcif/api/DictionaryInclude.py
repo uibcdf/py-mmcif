@@ -11,6 +11,7 @@ Implements PDBx/mmCIF dictionary composition using dictionary, category and item
 """
 
 import logging
+import ntpath
 import os
 from collections import OrderedDict
 
@@ -395,6 +396,9 @@ class DictionaryInclude(object):
 
     def __isLocal(self, locator):
         try:
+            locator = str(locator)
+            if os.path.isabs(locator) or ntpath.isabs(locator):
+                return True
             locSp = urlsplit(locator)
             return locSp.scheme in ["", "file"]
         except Exception as e:

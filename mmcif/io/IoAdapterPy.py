@@ -26,17 +26,19 @@ Python implementation of IoAdapterBase class providing read and write
 import gzip
 import io
 import logging
+import ntpath
+import os
 import uuid
 from contextlib import closing
 
 import requests
-from mmcif.io.IoAdapterBase import IoAdapterBase
-from mmcif.io.PdbxExceptions import PdbxError
-from mmcif.io.PdbxExceptions import PdbxSyntaxError
-from mmcif.io.PdbxReader import PdbxReader
-from mmcif.io.PdbxWriter import PdbxWriter
+
 from mmcif.io.BinaryCifReader import BinaryCifReader
 from mmcif.io.BinaryCifWriter import BinaryCifWriter
+from mmcif.io.IoAdapterBase import IoAdapterBase
+from mmcif.io.PdbxExceptions import PdbxError, PdbxSyntaxError
+from mmcif.io.PdbxReader import PdbxReader
+from mmcif.io.PdbxWriter import PdbxWriter
 
 try:
     from urllib.parse import urlsplit
@@ -303,6 +305,8 @@ class IoAdapterPy(IoAdapterBase):
 
     def __isLocal(self, locator):
         try:
+            if os.path.isabs(locator) or ntpath.isabs(locator):
+                return True
             locSp = urlsplit(locator)
             return locSp.scheme in ["", "file"]
         except Exception as e:

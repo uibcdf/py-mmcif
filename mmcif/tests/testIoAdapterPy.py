@@ -23,9 +23,9 @@ import sys
 import time
 import unittest
 
+from mmcif.api.DictionaryApi import DictionaryApi
 from mmcif.io.IoAdapterPy import IoAdapterPy as IoAdapter
 from mmcif.io.PdbxReader import PdbxError, PdbxSyntaxError
-from mmcif.api.DictionaryApi import DictionaryApi
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(HERE))
@@ -104,6 +104,10 @@ class IoAdapterTests(unittest.TestCase):
 
     def testFileReaderAscii(self):
         self.__testFileReader(self.__pathPdbxDataFile, enforceAscii=True)
+
+    def testWindowsAbsolutePathIsLocal(self):
+        io = IoAdapter(raiseExceptions=True)
+        self.assertTrue(io._IoAdapterPy__isLocal(r"C:\data\1bna.cif"))
 
     def testFileReaderBigAscii(self):
         self.__testFileReader(self.__pathBigPdbxDataFile, enforceAscii=True)
